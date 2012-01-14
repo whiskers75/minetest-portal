@@ -524,6 +524,116 @@ function move_player_to_penta_name(player_obj,name)
 	return nil
 end
 
---add_penta_portal("penta1",{x=1,y=1,z=1})
-remove_penta_portal("penta1")
+-------------------------------------------------------------------------------
+local texture = "obsidian_block.png"
+
+check_portal_integrity = function(pos)
+	local co = 1
+	for i=-1,1 do
+		for j=-1,1 do
+			p = {x = pos.x+j,y = pos.y,z = pos.z+i}
+			if minetest.env:get_node(p).name~="portal:baph_" .. co then return false; end
+			co = co +1 
+		end
+	end
+	return true
+end
+
+check_activated_portal_integrity = function(pos)
+	local co = 1
+	for i=-1,1 do
+		for j=-1,1 do
+			p = {x = pos.x+j,y = pos.y,z = pos.z+i}
+			if minetest.env:get_node(p).name~="portal:baph_" .. co .. "act" then return false; end
+			co = co +1 
+		end
+	end
+	return true
+end
+
+
+for i = 1, 9 do 
+	minetest.register_node("portal:baph_" .. i, {
+		tile_images = {"baph_obs.png^baph" .. i .. ".png",texture,texture,texture,texture,texture},
+		inventory_image = minetest.inventorycube("obsidian_block.png"),
+		is_ground_content = true,
+		material = minetest.digprop_glasslike(5.0),
+		dug_item = 'node "obsidian:obsidian_block" 1',
+	})
+
+	minetest.register_node("portal:baph_" .. i .. "_act", {
+		tile_images = {"baph" .. i .. "_a.png",texture,texture,texture,texture,texture},
+		inventory_image = "baph" .. i .. "_a.png",
+		inventory_image = minetest.inventorycube("obsidian_block.png"),
+		is_ground_content = true,
+		material = minetest.digprop_glasslike(5.0),
+		dug_item = 'node "obsidian:obsidian_block" 1',
+		light_source = 14-1,
+	})
+end
+
+local replace_node = function(pos, n)
+	minetest.env:remove_node(pos)
+	minetest.env:add_node(pos, {name = n})
+end
+
+minetest.register_on_punchnode(function(pos, node, puncher)
+	local tool = puncher.get_wielded_item(puncher)
+    if (tool == nil) or (tool.name ~= "obsidian:obsidian_knife") then return; end
+	if (node.name == "obsidian:obsidian_block") then 
+		local co = 1
+		for i=-1,1 do
+			for j=-1,1 do
+				p = {x = pos.x+j,y = pos.y,z = pos.z+i}
+				if minetest.env:get_node(p).name=="obsidian:obsidian_block" then 
+					replace_node(p,"portal:baph_" .. co)
+				end
+				co = co +1 
+			end
+		end
+	end
+end)
+
+minetest.register_on_chat_message(function(name, message)
+	local cmd = "/activate"
+	if message:sub(0, #cmd) == cmd then
+		print("activate")
+		local cmd = "/activate"
+		local pname = string.match(message, cmd.." (.*)")
+		if pname == nil then
+			minetest.chat_send_player(name, 'usage: '..cmd..' stackstring')
+			return true -- Handled chat message
+		end
+
+		local player = minetest.env:get_player_by_name(name)
+		local pos = player:getpos()
+		--pos.y = pos.y -0.2
+		pos.x = math.floor(pos.x)
+		pos.y = math.floor(pos.y)
+		pos.z = math.floor(pos.z)
+		print(pos.x .. pos.y .. pos.z)
+		local n = minetest.env:get_node({x=pos.x,y=pos.y,z=pos.z})
+
+		if (check_portal_integrity(pos)) then 
+			minetest.chat_send_player(name, "AVE SATANAS!")
+
+		local co = 1
+		for i=-1,1 do
+			for j=-1,1 do
+				p = {x = pos.x+j,y = pos.y,z =pos.z+i}
+					
+					replace_node(p,"portal:baph_" .. co .. "_act")
+
+				co = co +1 
+			end
+		end
+
+		add_penta_portal(pname,pos)
+
+		minetest.chat_send_player(name, 'Portal ' .. pname.. ' made!')
+		end
+		return true
+	end
+end)
+-------------------------------------------------------------------------------
 print("[Portal " .. version .. "] Loaded!")

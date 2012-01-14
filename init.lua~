@@ -261,6 +261,7 @@ local function remove_portal_door(pos,entity)
 				minetest.env:add_node({x=pos.x, y=(pos.y + (this_portal.size-1)/2), z=(pos.z + (this_portal.size-1)/2)}, {name="portal:rune_raido_g"})
 			end
 		end
+		print("check!!!!!!!!!!!!")
 		local portal_broken = false
 		local dynpos = {}
 		local dynnodename = ""
