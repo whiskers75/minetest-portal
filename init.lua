@@ -599,7 +599,8 @@ for i = 1, 9 do
 		inventory_image = "baph" .. i .. "_a.png",
 		inventory_image = minetest.inventorycube("obsidian_block.png"),
 		is_ground_content = true,
-		material = minetest.digprop_glasslike(5.0),
+		diggable = false,
+		--material = minetest.digprop_glasslike(5.0),
 		dug_item = 'node "obsidian:obsidian_block" 1',
 		light_source = 14-1,
 	})
