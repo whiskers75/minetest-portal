@@ -15,7 +15,7 @@
 	halfportal_list = {} -- unfinished portals
 	dofile (minetest.get_modpath('portal') .. "/portal_list.lua")
 	portals_changed = false
-	local rune_unactive = "portal:rune_raido_b"
+	local rune_unactive = "portal:rune_seed"
 	local rune_active = "portal:rune_raido_g"
 	local rune_otherstone ="default:cobble"
 	
@@ -177,8 +177,8 @@ function build_portal(pos,placer,size,rune,stone)
 				print("player "..placer:get_player_name().." build halfportal ("..pos.x..","..pos.y..","..pos.z..")")
 				--local pinv = placer.get_inventory()
 				local pinv = placer:get_inventory()
-				pinv:autoinsert_stackstring("main",  'node "portal:rune_raido_b" 1')
-				--placer:add_to_inventory("main", 'node "portal:rune_raido_b" 1')
+				pinv:autoinsert_stackstring("main",  'node "portal:rune_seed" 1')
+				--placer:add_to_inventory("main", 'node "portal:rune_seed" 1')
 				halfportal_list[pos.x .."_" .. pos.y .. "_" .. pos.z] = { 	builder = placername, --this portal add to portal_list
 																			type ="public",
 																			portaltype = "door",
@@ -431,30 +431,30 @@ local function remove_portal_door(pos,entity)
 	minetest.register_entity("portal:portal_control_ent", portal_control_ent)
 	
 	------------ Nodes ----------------
-	minetest.register_node("portal:rune_raido_b", {
+	minetest.register_node("portal:rune_seed", {
 		tile_images = {"default_cobble.png","default_cobble.png","raido_b.png","raido_b.png","raido_b.png","raido_b.png"},
 		inventory_image = minetest.inventorycube("raido_b.png"),
 		is_ground_content = false,
 		material = minetest.digprop_dirtlike(1.0),
-		dug_item = 'node "portal:rune_raido_b" 1',
+		dug_item = 'node "portal:rune_seed" 1',
 	})
 	minetest.register_node("portal:rune_raido_g", {
 		tile_images = {"default_cobble.png","default_cobble.png","raido_g.png","raido_g.png","raido_g.png","raido_g.png"},
 		inventory_image = minetest.inventorycube("raido_b.png"),
 		is_ground_content = false,
 		material = minetest.digprop_dirtlike(1.0),
-		dug_item = 'node "portal:rune_raido_b" 1',
+		dug_item = 'node "portal:rune_seed" 1',
 		light_source = 8,
 	})
 
 minetest.register_on_placenode(function(pos, newnode, placer)
-	if newnode.name == "portal:rune_raido_b" then
+	if newnode.name == "portal:rune_seed" then
 		build_portal(pos,placer,5,rune_unactive,rune_otherstone)
 	end
 end)
 
 minetest.register_craft({
-	output = 'node "portal:rune_raido_b" 1',
+	output = 'node "portal:rune_seed" 1',
 	recipe = {
 		{'node "default:sand"', 'node "default:wood"','node "default:cobble"'},
 		{'node "default:dirt"', 'node "default:mese" 5','node "default:jungletree"'},
@@ -535,21 +535,6 @@ function remove_penta_portal_pos(pos,dispersion)
 		end
 	end
 	return nil
-end
-	
-	
-	local p_pos = get_penta_portal_pos(name)
-	if p_pos ~= false then
-		portal_list[p_pos.x .."_" .. p_pos.y .. "_" .. p_pos.z] = nil
-		portals_changed = true
-		save_portals ()
-		print("[Portal] Penta "..name .." removed!")
-		minetest.chat_send_all('Portal ' .. name.. ' removed!')
-		deactivate_activated_portal(p_pos)
-		return true
-	else
-		return false
-	end
 end
 
 function move_player_to_penta_name(player_obj,pname)
