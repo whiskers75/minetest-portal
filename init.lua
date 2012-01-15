@@ -516,8 +516,8 @@ end
 function move_player_to_penta_name(player_obj,name)
 	for i,j in pairs(portal_list) do
 		if (j.name == name)and(j.portaltype == "penta") then
-			print("player "..obj:get_player_name().." teleports to penta '" ..name.."'")
-			player.object:setpos({x =j.myx,y=j.muy,z=j.myz})
+			print("player "..player_obj:get_player_name().." teleports to penta '" ..name.."'")
+			player_obj:setpos({x =j.myx,y=j.myy,z=j.myz})
 			return {x =j.myx,y=j.muy,z=j.myz}
 		end
 	end
@@ -607,7 +607,7 @@ minetest.register_on_chat_message(function(name, message)
 
 		local player = minetest.env:get_player_by_name(name)
 		local pos = player:getpos()
-		--pos.y = pos.y -0.2
+		pos.y = pos.y -0.2
 		pos.x = math.floor(pos.x)
 		pos.y = math.floor(pos.y)
 		pos.z = math.floor(pos.z)
@@ -627,11 +627,39 @@ minetest.register_on_chat_message(function(name, message)
 				co = co +1 
 			end
 		end
-
+		
+		pos.x = math.floor(pos.x)
+		pos.y = math.floor(pos.y)
+		pos.z = math.floor(pos.z)
 		add_penta_portal(pname,pos)
 
 		minetest.chat_send_player(name, 'Portal ' .. pname.. ' made!')
 		end
+		return true
+	end
+end)
+
+minetest.register_on_chat_message(function(name, message)
+	local cmd = "/cadabra"
+	if message:sub(0, #cmd) == cmd then
+		local pname = string.match(message, cmd.." (.*)")
+		if pname == nil then
+			minetest.chat_send_player(name, 'usage: '..cmd..' stackstring')
+			return true -- Handled chat message
+		end
+
+		local player = minetest.env:get_player_by_name(name)
+		local pos = player:getpos()
+		pos.y = pos.y -0.2
+		pos.x = math.floor(pos.x)
+		pos.y = math.floor(pos.y)
+		pos.z = math.floor(pos.z)
+		print(pos.x .. pos.y .. pos.z)
+		local n = minetest.env:get_node({x=pos.x,y=pos.y,z=pos.z})
+
+		print("move",pname,move_player_to_penta_name(player,pname))
+
+		minetest.chat_send_player(name, 'Portal ' .. pname.. ' made!')
 		return true
 	end
 end)
