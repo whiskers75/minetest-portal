@@ -1,6 +1,6 @@
 --
 --
--- 		Author: Nemo08
+-- 		Author: Nemo08, Hackeridze
 --		Portal mod
 --
 	local version = "0.0.3"
@@ -505,6 +505,39 @@ function get_penta_portal_pos(name)
 end
 
 function remove_penta_portal(name)
+	local p_pos = get_penta_portal_pos(name)
+	if p_pos ~= false then
+		portal_list[p_pos.x .."_" .. p_pos.y .. "_" .. p_pos.z] = nil
+		portals_changed = true
+		save_portals ()
+		print("[Portal] Penta "..name .." removed!")
+		minetest.chat_send_all('Portal ' .. name.. ' removed!')
+		deactivate_activated_portal(p_pos)
+		return true
+	else
+		return false
+	end
+end
+
+function remove_penta_portal_pos(pos,dispersion)
+	if dispersion == nil then
+		dispersion = 0
+	end
+	for i,j in pairs(portal_list) do
+		if (j.myx <= (pos.x+dispersion))and(j.myx >= (pos.x-dispersion))and(j.myy <= (pos.y+dispersion))and(j.myy >= (pos.y-dispersion))
+			and(j.myz <= (pos.z+dispersion))and(j.myz >= (pos.z-dispersion))then
+			deactivate_activated_portal({x=j.myx,y=j.muy,z=j.myz})
+			portal_list[j.myx .."_" .. j.myy .. "_" .. j.myz] = nil
+			save_portals ()
+			print("[Portal] Penta "..name .." removed!")
+			minetest.chat_send_all('Portal ' .. name.. ' removed!')
+			return true
+		end
+	end
+	return nil
+end
+	
+	
 	local p_pos = get_penta_portal_pos(name)
 	if p_pos ~= false then
 		portal_list[p_pos.x .."_" .. p_pos.y .. "_" .. p_pos.z] = nil
