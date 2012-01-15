@@ -3,7 +3,7 @@
 -- 		Author: Nemo08
 --		Portal mod
 --
-	local version = "0.0.1"
+	local version = "0.0.3"
 --
 --	
 
@@ -462,7 +462,11 @@ minetest.register_craft({
 	}
 })
 
+---------- PENTAS -----------
 function add_penta_portal(name,pos)
+
+	if check_activated_portal_integrity(pos) == false then return false; end
+
 	local nameinbase =  false
 	for i,j in pairs(portal_list) do
 		if j.name == name then
@@ -486,6 +490,7 @@ function add_penta_portal(name,pos)
 		portals_changed = true
 		save_portals ()
 		print("penta "..name.." added")
+		minetest.chat_send_all('Portal ' .. name.. ' made!')
 		return true
 	end
 end
@@ -496,35 +501,47 @@ function get_penta_portal_pos(name)
 			return {x =j.myx,y=j.myy,z=j.myz}
 		end
 	end
-	return nil
+	return false
 end
 
 function remove_penta_portal(name)
-	for i,j in pairs(portal_list) do
-		print(name,j.name)
-		if (j.name == name)and(j.portaltype == "penta") then
-			portal_list[j.myx .."_" .. j.myy .. "_" .. j.myz] = nil
-			portals_changed = true
-			save_portals ()
-			print("penta "..name .." removed")
-			return true
-		end
+	local p_pos = get_penta_portal_pos(name)
+	if p_pos ~= false then
+		portal_list[p_pos.x .."_" .. p_pos.y .. "_" .. p_pos.z] = nil
+		portals_changed = true
+		save_portals ()
+		print("[Portal] Penta "..name .." removed!")
+		minetest.chat_send_all('Portal ' .. name.. ' removed!')
+		deactivate_activated_portal(p_pos)
+		return true
+	else
+		return false
 	end
-	return nil
 end
 
-function move_player_to_penta_name(player_obj,name)
-	for i,j in pairs(portal_list) do
-		if (j.name == name)and(j.portaltype == "penta") then
-			print("player "..player_obj:get_player_name().." teleports to penta '" ..name.."'")
-			player_obj:setpos({x =j.myx,y=j.myy,z=j.myz})
-			return {x =j.myx,y=j.muy,z=j.myz}
+function move_player_to_penta_name(player_obj,pname)
+	local to_pos = get_penta_portal_pos(pname)
+	if to_pos ~= false then
+		print("[Portal] Player "..player_obj:get_player_name().." teleports to penta '" ..pname.."'!")
+		player_obj:setpos({x =to_pos.x,y=to_pos.y+0.5,z=to_pos.z})
+		if check_activated_portal_integrity(to_pos) == false then
+			remove_penta_portal(pname)
+			print("[Portal] Penta "..pname.." broken!")
 		end
+		return true
+	else
+		print("[Portal] No any pentas with name "..pname.."!")
+		return false
 	end
-	return nil
 end
 
 -------------------------------------------------------------------------------
+
+local replace_node = function(pos, n)
+	minetest.env:remove_node(pos)
+	minetest.env:add_node(pos, {name = n})
+end
+
 local texture = "obsidian_block.png"
 
 check_portal_integrity = function(pos)
@@ -543,11 +560,27 @@ check_activated_portal_integrity = function(pos)
 	local co = 1
 	for i=-1,1 do
 		for j=-1,1 do
-			p = {x = pos.x+j,y = pos.y,z = pos.z+i}
-			if minetest.env:get_node(p).name~="portal:baph_" .. co .. "act" then return false; end
+			p = {x = pos.x+j,y = pos.y-0.2,z = pos.z+i}
+			if minetest.env:get_node(p).name~="portal:baph_" .. co .. "_act" then return false; end
 			co = co +1 
 		end
 	end
+	return true
+end
+
+deactivate_activated_portal = function(pos)
+	if pos == false then return; end
+	local co = 1
+	for i=-1,1 do
+		for j=-1,1 do
+			p = {x = pos.x+j,y = pos.y,z = pos.z+i}
+			if minetest.env:get_node(p).name=="portal:baph_" .. co .. "_act" then
+				replace_node(p,"portal:baph_" .. co)
+			end
+			co = co +1 
+		end
+	end
+	print("[Portal] Penta deactivated!")
 	return true
 end
 
@@ -570,11 +603,6 @@ for i = 1, 9 do
 		dug_item = 'node "obsidian:obsidian_block" 1',
 		light_source = 14-1,
 	})
-end
-
-local replace_node = function(pos, n)
-	minetest.env:remove_node(pos)
-	minetest.env:add_node(pos, {name = n})
 end
 
 minetest.register_on_punchnode(function(pos, node, puncher)
@@ -601,65 +629,80 @@ minetest.register_on_chat_message(function(name, message)
 		local cmd = "/activate"
 		local pname = string.match(message, cmd.." (.*)")
 		if pname == nil then
-			minetest.chat_send_player(name, 'usage: '..cmd..' stackstring')
+			minetest.chat_send_player(name, 'usage: '..cmd..' portal_name')
 			return true -- Handled chat message
 		end
 
 		local player = minetest.env:get_player_by_name(name)
 		local pos = player:getpos()
 		pos.y = pos.y -0.2
-		pos.x = math.floor(pos.x)
-		pos.y = math.floor(pos.y)
-		pos.z = math.floor(pos.z)
-		print(pos.x .. pos.y .. pos.z)
-		local n = minetest.env:get_node({x=pos.x,y=pos.y,z=pos.z})
+		print("[Portal] Trying to activete " .. pos.x..' ' .. pos.y..' ' .. pos.z..'...')
 
 		if (check_portal_integrity(pos)) then 
 			minetest.chat_send_player(name, "AVE SATANAS!")
 
-		local co = 1
-		for i=-1,1 do
-			for j=-1,1 do
-				p = {x = pos.x+j,y = pos.y,z =pos.z+i}
-					
+			local co = 1
+			for i=-1,1 do
+				for j=-1,1 do
+					p = {x = pos.x+j,y = pos.y,z =pos.z+i}
 					replace_node(p,"portal:baph_" .. co .. "_act")
-
-				co = co +1 
+					co = co +1 
+				end
 			end
-		end
-		
-		pos.x = math.floor(pos.x)
-		pos.y = math.floor(pos.y)
-		pos.z = math.floor(pos.z)
-		add_penta_portal(pname,pos)
-
-		minetest.chat_send_player(name, 'Portal ' .. pname.. ' made!')
+			add_penta_portal(pname,pos)
 		end
 		return true
 	end
 end)
 
 minetest.register_on_chat_message(function(name, message)
-	local cmd = "/cadabra"
+	local cmd = "/tp"
 	if message:sub(0, #cmd) == cmd then
 		local pname = string.match(message, cmd.." (.*)")
 		if pname == nil then
-			minetest.chat_send_player(name, 'usage: '..cmd..' stackstring')
+			minetest.chat_send_player(name, 'usage: '..cmd..' portal_name')
 			return true -- Handled chat message
 		end
-
 		local player = minetest.env:get_player_by_name(name)
 		local pos = player:getpos()
 		pos.y = pos.y -0.2
-		pos.x = math.floor(pos.x)
-		pos.y = math.floor(pos.y)
-		pos.z = math.floor(pos.z)
-		print(pos.x .. pos.y .. pos.z)
-		local n = minetest.env:get_node({x=pos.x,y=pos.y,z=pos.z})
+		if check_activated_portal_integrity(pos) == false then
+			minetest.chat_send_player(name,"Started portal broken!")
+			deactivate_activated_portal(pos)
+			return true
+		elseif move_player_to_penta_name(player,pname) == true then
+			minetest.chat_send_player(name,'You teleported to ' .. pname.. '!')
+			return true
+		else
+			minetest.chat_send_player(name,' Can\'t teleport you to ' .. pname.. '!')
+			return true
+		end
+	end
+end)
 
-		print("move",pname,move_player_to_penta_name(player,pname))
-
-		minetest.chat_send_player(name, 'Portal ' .. pname.. ' made!')
+minetest.register_on_chat_message(function(name, message)
+	local cmd = "/deactivate"
+	if message:sub(0, #cmd) == cmd then
+		local pname = string.match(message, cmd.." (.*)")
+		if pname == nil then
+			local player = minetest.env:get_player_by_name(name)
+			local pos = player:getpos()
+			pos.y = pos.y -0.2
+			if deactivate_activated_portal(pos) == false then
+				minetest.chat_send_player(name, 'usage: '..cmd..' portal_name')
+			else
+				minetest.chat_send_player(name,'Portal under you deactivated')
+			end
+			return true -- Handled chat message
+		end
+		local player = minetest.env:get_player_by_name(name)
+		local pos = player:getpos()
+		pos.y = pos.y -0.2
+		
+		if (remove_penta_portal(pname) == false) then
+			deactivate_activated_portal(get_penta_portal_pos(pname))
+			return true
+		end
 		return true
 	end
 end)
