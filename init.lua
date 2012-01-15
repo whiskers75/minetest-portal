@@ -608,7 +608,7 @@ end
 minetest.register_on_punchnode(function(pos, node, puncher)
 	local tool = puncher.get_wielded_item(puncher)
     if (tool == nil) or (tool.name ~= "obsidian:obsidian_knife") then return; end
-	if (node.name == "obsidian:obsidian_block") then 
+	if (node.name == "obsidian:obsidian_block")or minetest.env:get_node(p).name=="portal:baph_5" then 
 		local co = 1
 		for i=-1,1 do
 			for j=-1,1 do
