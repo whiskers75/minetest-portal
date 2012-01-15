@@ -7,95 +7,21 @@
 --
 --	
 
-	local save_conf_time = 5
 	local portals_content_conf = minetest.get_modpath('portal').."/portals_content"
 	
 	
 	portal_list = {}
 	halfportal_list = {} -- unfinished portals
-	dofile (minetest.get_modpath('portal') .. "/portal_list.lua")
 	portals_changed = false
 	local rune_unactive = "portal:rune_seed"
 	local rune_active = "portal:rune_raido_g"
 	local rune_otherstone ="default:cobble"
 	
-	-----------------------------------------------------------------------------
-	local base = _G
-local function isValidType(valueType)
-  return "number" == valueType or 
-         "boolean" == valueType or 
-         "string" == valueType
-end
-
--- конвертация переменной в строку
-local function valueToString (value)
-  local valueType = base.type(value)
-  
-  if "number" == valueType or "boolean" == valueType then
-    result = base.tostring(value)
-  else  -- assume it is a string
-    -- обратите внимание на флаг "%q"!
-    -- этот флаг правильно обрабатывает строки, 
-    -- содержащие в себе кавычки и другие управляющие символы
-    result = base.string.format("%q", value)
-  end
-  
-  return result
-end
-
-local function portal_save (sfile,name, value, saved)
-  saved = saved or {}       -- initial value
-  sfile:write(name, " = ")
-  local valueType = base.type(value)
-  if isValidType(valueType) then
-    sfile:write(valueToString(value), "\n")
-  elseif "table" == valueType then
-    if saved[value] then    -- value already saved?
-      sfile:write(saved[value], "\n")  -- use its previous name
-    else
-      saved[value] = name   -- save name for next time
-      sfile:write("{}\n")     -- create a new table
-      for k,v in base.pairs(value) do      -- save its fields
-        -- добавляем проверку ключа таблицы
-        local keyType = base.type(k)
-        if isValidType(keyType) then
-          local fieldname = base.string.format("%s[%s]", name, valueToString(k))
-          portal_save(sfile,fieldname, v, saved)
-        else
-          base.error("cannot save a " .. keyType)
-        end
-      end
-    end
-  else
-    base.error("cannot save a " .. valueType)
-  end
-end
-	-----------------------------------------------------------------------------
 	
-local function save_portals ()
-		if portals_changed then
-			local output = io.open(minetest.get_modpath('portal').."/portal_list.lua", "w")
-			portal_save(output,"portal_list", portal_list)
-			portal_save(output,"halfportal_list", halfportal_list)
-			io.close(output)
-			print("Сохранил порталы!!! ")
-		end
-	end	
-	
-	local delta = 0
-	minetest.register_globalstep(function(dtime)
-    delta = delta + dtime
-    if delta > save_conf_time then
-        delta = 0
-		if portals_changed then
-			save_portals()
-			portals_changed = false
-		end
-    end
-end)
+	dofile (minetest.get_modpath('portal') .. "/base_implement.lua")
 	
 	
-function build_portal(pos,placer,size,rune,stone)
+function build_portal_door(pos,placer,size,rune,stone)
 		local placer_pos = placer:getpos()
 		local dirang = -1  -- in grad, 0 grad from x counterclockwise
 		local ld = placer:get_look_dir()
@@ -197,7 +123,7 @@ function build_portal(pos,placer,size,rune,stone)
 		portals_changed = true
 	end
 	
-local function remove_portal_door(pos,entity)
+	local function remove_portal_door(pos,entity)
 		pos.x = math.floor(pos.x)
 		pos.y = math.floor(pos.y)
 		pos.z = math.floor(pos.z)
@@ -246,22 +172,25 @@ local function remove_portal_door(pos,entity)
 			this_portal = halfportal_list[pos.x .."_" .. pos.y .. "_" .. pos.z]
 		end
 		if this_portal.portaltype ~= "door" then
+			print("return")
 			return
 		end
+
 		if (this_portal.state == "built") then
 			if (this_portal.dir == 90)or(this_portal.dir == 270) then
+			print("checkportal90-270",this_portal.state,pos.x,pos.y,pos.z)
 				minetest.env:add_node({x=pos.x, y=pos.y, z=pos.z}, {name="portal:rune_raido_g"})
 				minetest.env:add_node({x=pos.x, y=(pos.y+(this_portal.size-1)), z=pos.z}, {name="portal:rune_raido_g"})
 				minetest.env:add_node({x=(pos.x - (this_portal.size-1)/2), y=(pos.y + (this_portal.size-1)/2), z=pos.z}, {name="portal:rune_raido_g"})
 				minetest.env:add_node({x=(pos.x + (this_portal.size-1)/2), y=(pos.y + (this_portal.size-1)/2), z=pos.z}, {name="portal:rune_raido_g"})
 			elseif (this_portal.state == "half") then
+		print("checkportalhalf",this_portal.state)
 				minetest.env:add_node({x=pos.x, y=pos.y, z=pos.z}, {name="portal:rune_raido_g"})
 				minetest.env:add_node({x=pos.x, y=(pos.y+(this_portal.size-1)), z=pos.z}, {name="portal:rune_raido_g"})
 				minetest.env:add_node({x=pos.x, y=(pos.y + (this_portal.size-1)/2), z=(pos.z - (this_portal.size-1)/2)}, {name="portal:rune_raido_g"})
 				minetest.env:add_node({x=pos.x, y=(pos.y + (this_portal.size-1)/2), z=(pos.z + (this_portal.size-1)/2)}, {name="portal:rune_raido_g"})
 			end
 		end
-		print("check!!!!!!!!!!!!")
 		local portal_broken = false
 		local dynpos = {}
 		local dynnodename = ""
@@ -328,6 +257,7 @@ local function remove_portal_door(pos,entity)
 		exname = "no_exit!",
 		timer = 0,
 		state="",
+		portaltype="",
 	}
 	
 	portal_control_ent.on_activate = function(self, data)
@@ -336,7 +266,7 @@ local function remove_portal_door(pos,entity)
 			pos.y = math.floor(pos.y)
 			pos.z = math.floor(pos.z)
 		local this_portal = {}
-		
+		print("activate ",pos.x,pos.y,pos.z)
 		if portal_list[pos.x .."_" .. pos.y .. "_" .. pos.z] ~= nil then
 			this_portal = portal_list[pos.x .."_" .. pos.y .. "_" .. pos.z]
 		else
@@ -357,6 +287,7 @@ local function remove_portal_door(pos,entity)
 		self.owner = this_portal.builder
 		self.exname = this_portal.exname
 		self.state = this_portal.state
+		self.portaltype = this_portal.portaltype
 		check_portal_door(pos,self)
 	end
 	
@@ -367,7 +298,7 @@ local function remove_portal_door(pos,entity)
 			pos.y = math.floor(pos.y)
 			pos.z = math.floor(pos.z)
 			
-		if (self.timer>1)and(self.state ~= "deleted")and((self.state)) then
+		if (self.timer>1)and(self.state ~= "deleted")and(self.portaltype == "door") then
 			self.timer = 0
 			local this_portal = {}
 			if portal_list[pos.x .."_" .. pos.y .. "_" .. pos.z] ~= nil then
@@ -436,20 +367,20 @@ local function remove_portal_door(pos,entity)
 		inventory_image = minetest.inventorycube("raido_b.png"),
 		is_ground_content = false,
 		material = minetest.digprop_dirtlike(1.0),
-		dug_item = 'node "portal:rune_seed" 1',
+		--dug_item = 'node "portal:rune_seed" 1',
 	})
 	minetest.register_node("portal:rune_raido_g", {
 		tile_images = {"default_cobble.png","default_cobble.png","raido_g.png","raido_g.png","raido_g.png","raido_g.png"},
-		inventory_image = minetest.inventorycube("raido_b.png"),
+		inventory_image = minetest.inventorycube("raido_g.png"),
 		is_ground_content = false,
 		material = minetest.digprop_dirtlike(1.0),
-		dug_item = 'node "portal:rune_seed" 1',
+		--dug_item = 'node "portal:rune_seed" 1',
 		light_source = 8,
 	})
 
 minetest.register_on_placenode(function(pos, newnode, placer)
 	if newnode.name == "portal:rune_seed" then
-		build_portal(pos,placer,5,rune_unactive,rune_otherstone)
+		build_portal_door(pos,placer,5,rune_unactive,rune_otherstone)
 	end
 end)
 
