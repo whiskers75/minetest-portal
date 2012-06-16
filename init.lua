@@ -1,9 +1,9 @@
 --
 --
--- 		Author: Nemo08, Hackeridze
+-- 		Author: Nemo08, Hackeridze, and whiskers75 (fixed it up)
 --		Portal mod
 --
-	local version = "0.0.3"
+	local version = "0.0.4"
 --
 --	
 
@@ -17,7 +17,8 @@
 	
 	
 	dofile (minetest.get_modpath('portal') .. "/base_implement.lua")
-	
+
+
 
 ---------- PENTAS -----------
 function add_penta_portal(name,pos)
@@ -215,7 +216,7 @@ minetest.register_on_chat_message(function(name, message)
 		print("[Portal] Trying to activete " .. pos.x..' ' .. pos.y..' ' .. pos.z..'...')
 
 		if (check_portal_integrity(pos)) then 
-			minetest.chat_send_player(name, "AVE SATANAS!")
+			minetest.chat_send_player(name, "Portal activated.")
 
 			local co = 1
 			for i=-1,1 do

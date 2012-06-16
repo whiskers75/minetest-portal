@@ -1,3 +1,4 @@
 *.lua~
 *.db
 .gitignore~
+portal_list.lua

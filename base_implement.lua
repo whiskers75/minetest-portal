@@ -23,7 +23,7 @@ local function valueToString (value)
   return result
 end
 
-local function portal_save (sfile,name, value, saved)
+local function save_portals (sfile,name, value, saved)
   saved = saved or {}       -- initial value
   sfile:write(name, " = ")
   local valueType = base.type(value)
