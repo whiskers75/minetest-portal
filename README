@@ -1,0 +1,22 @@
+Portal Mod for Minetest-c55
+---------------------------
+Credit to Nemo08 and Hackeridze for making this mod.
+Credit to me, whiskers75, for making it usable. :)
+
+This mod adds portals to Minetest!
+Simply make a 3x3 base out of obsidian and hit the middle with an obsidian knife.
+If that fails, make the portal manually:
+/giveme portal:baph_(number)
+Replace number with 1-9 to get that piece of the base.
+Line the whole baphosimb up, otherwise it will not work.
+Arrange the pieces like so:
+
+147
+258
+369
+
+Then jump on piece 5 and type /activate [the portal's new name]
+To teleport, type /tp [another portal's name]
+And if you want to deactivate a portal, type /deactivate while on piece 5.
+
+Enjoy!
