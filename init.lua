@@ -46,7 +46,7 @@ function add_penta_portal(name,pos)
 			name = name,
 		}
 		portals_changed = true
-		save_portals ()
+		--save_portals () *** this line crashes Minetest! ***
 		print("penta "..name.." added")
 		minetest.chat_send_all('Portal ' .. name.. ' made!')
 		return true
