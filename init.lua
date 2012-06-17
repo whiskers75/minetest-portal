@@ -24,7 +24,6 @@
 ---------- PENTAS -----------
 function add_penta_portal(name,pos)
 
-	if check_activated_portal_integrity(pos) == false then return false; end
 
 	local nameinbase =  false
 	for i,j in pairs(portal_list) do
@@ -44,7 +43,7 @@ function add_penta_portal(name,pos)
 			myx = pos.x,
 			myy = pos.y,
 			myz = pos.z,
-			name = name,save_portals ()
+			name = name
 		}
 		portals_changed = true
 		--save_portals () *** this line crashes Minetest! ***
@@ -99,10 +98,6 @@ function move_player_to_penta_name(player_obj,pname)
 	if to_pos ~= false then
 		print("[Portal] Player "..player_obj:get_player_name().." teleports to penta '" ..pname.."'!")
 		player_obj:setpos({x =to_pos.x,y=to_pos.y+0.5,z=to_pos.z})
-		if check_activated_portal_integrity(to_pos) == false then
-			remove_penta_portal(pname)
-			print("[Portal] Penta "..pname.." broken!")
-		end
 		return true
 	else
 		print("[Portal] No any pentas with name "..pname.."!")
@@ -242,11 +237,7 @@ minetest.register_on_chat_message(function(name, message)
 		local player = minetest.env:get_player_by_name(name)
 		local pos = player:getpos()
 		pos.y = pos.y -0.2
-		if check_activated_portal_integrity(pos) == false then
-			minetest.chat_send_player(name,"Started portal broken!")
-			deactivate_activated_portal(pos)
-			return true
-		elseif move_player_to_penta_name(player,pname) == true then
+		if move_player_to_penta_name(player,pname) == true then
 			minetest.chat_send_player(name,'You teleported to ' .. pname.. '!')
 			return true
 		else

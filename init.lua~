@@ -2,6 +2,7 @@
 --
 -- 		Author: Nemo08, Hackeridze, and whiskers75 (fixed it up)
 --		Portal mod
+-- 		Note: The line "save_portals ()" crashes Minetest.
 --
 	local version = "0.0.4"
 --
@@ -43,7 +44,7 @@ function add_penta_portal(name,pos)
 			myx = pos.x,
 			myy = pos.y,
 			myz = pos.z,
-			name = name,
+			name = name
 		}
 		portals_changed = true
 		--save_portals () *** this line crashes Minetest! ***
@@ -67,7 +68,6 @@ function remove_penta_portal(name)
 	if p_pos ~= false then
 		portal_list[p_pos.x .."_" .. p_pos.y .. "_" .. p_pos.z] = nil
 		portals_changed = true
-		save_portals ()
 		print("[Portal] Penta "..name .." removed!")
 		minetest.chat_send_all('Portal ' .. name.. ' removed!')
 		deactivate_activated_portal(p_pos)
@@ -86,7 +86,6 @@ function remove_penta_portal_pos(pos,dispersion)
 			and(j.myz <= (pos.z+dispersion))and(j.myz >= (pos.z-dispersion))then
 			deactivate_activated_portal({x=j.myx,y=j.muy,z=j.myz})
 			portal_list[j.myx .."_" .. j.myy .. "_" .. j.myz] = nil
-			save_portals ()
 			print("[Portal] Penta "..name .." removed!")
 			minetest.chat_send_all('Portal ' .. name.. ' removed!')
 			return true
